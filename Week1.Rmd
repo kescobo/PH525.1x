@@ -1,0 +1,57 @@
+---
+title: "GettingStartedExercises"
+author: "Kevin Bonham"
+date: "2May, 2016"
+output: html_document
+---
+
+```{r}
+filename = "dagdata/inst/extdata/femaleMiceWeights.csv"
+weights = read.csv(filename)
+```
+
+A2 Q 1-5
+```{r}
+weights$Bodyweight[11]
+length(weights$Bodyweight)
+show(weights)
+
+weights[12,2]
+mean(weights$Bodyweight[13:24])
+```
+
+A2 Q 6
+```{r}
+?sample
+set.seed(1)
+sample(weights$Bodyweight[13:24], 1)
+```
+
+V3
+```{r}
+library(dplyr)
+dat = read.csv(filename)
+View(dat)
+
+controls = filter(dat, Diet=="chow") %>% select(Bodyweight) %>% unlist
+hf = filter(dat, Diet=="hf") %>% select(Bodyweight) %>% unlist
+```
+
+A3
+```{r}
+dat = read.csv("dagdata/inst/extdata/msleep_ggplot2.csv")
+View(dat)
+
+class(dat)
+primates = filter(dat, order=="Primates")
+nrow(primates)
+class(primates)
+
+primates.sleep = select(primates, sleep_total)
+
+class(primates.sleep)
+mean(unlist(primates.sleep))
+?summarize
+
+```
+
