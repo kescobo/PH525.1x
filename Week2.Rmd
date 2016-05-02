@@ -4,19 +4,182 @@ author: "Kevin Bonham"
 date: "2May, 2016"
 output: html_document
 ---
+# Random Variables and Probability Distributions
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Video notes
+Statistical inference - error values, p values etc
 
 ```{r}
-summary(cars)
+library(dplyr)
+dat = read.csv("dagdata/inst/extdata/femaleMiceWeights.csv")
+
+controls = filter(dat, Diet=="chow") %>% select(Bodyweight) %>% unlist
+treatment = filter(dat, Diet=="hf") %>% select(Bodyweight) %>% unlist
+
+mean(controls)
+mean(treatment)
+mean(treatment) - mean(controls) 
 ```
 
-You can also embed plots, for example:
+Because 12 mice selected for controls and for hf diet were randomly selected, their mean weights are random variables. 
 
-```{r, echo=FALSE}
-plot(cars)
+As demo, we can use data from Jax that has entire population distribution
+
+```{r}
+population = read.csv("dagdata/inst/extdata/femaleControlsPopulation.csv") %>% unlist
+
+mean( sample(population, 12) ) # 22.5475
+# Each repeat gives different answer
+mean( sample(population, 12) ) # 23.2025
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Random variables fluctuate depending on the sample taken. What is the range of fluctuation?
+
+### Assessment
+```{r}
+avg = mean(population)
+
+set.seed(1)
+abs( avg - mean(sample(population, 5)))
+
+set.seed(5)
+abs( avg - mean(sample(population, 5)))
+```
+
+## Null distributions
+
+Null hypothesis is that the hf diet had no effect. Can simmulate with `population` to see how likely it is that the difference in weight of the control and treatment mice would arise just due to sampling. 
+
+```{r}
+obs = mean(treatment) - mean(controls) 
+
+s_control = sample(population, 12)
+s_treatment = sample(population, 12)
+mean(s_control) - mean(s_treatment) # -1.49
+
+# each time we run this, we get a different value again
+s_control = sample(population, 12)
+s_treatment = sample(population, 12)
+mean(s_control) - mean(s_treatment) # -0.1
+
+# ... run again
+s_control = sample(population, 12)
+s_treatment = sample(population, 12)
+mean(s_control) - mean(s_treatment) # 3.06
+```
+
+Null distribution is the entire range of outcomes that could under the null hypothesis. To simulate (for loops not the best option apparently, but...)
+
+```{r}
+n = 10000
+nulls = vector("numeric", n)
+for(i in 1:n){
+  s_control = sample(population, 12)
+  s_treatment = sample(population, 12)
+  nulls[i] = mean(s_control) - mean(s_treatment)
+}
+
+max(nulls)
+min(nulls)
+
+hist(nulls)
+```
+
+So, given that our observed difference was ~3 grams, how often would we observe this under the null hypothesis?
+
+```{r}
+nulls > obs # returns a boolean vector
+
+# since TRUE evals to 1 and FALSE to 0...
+mean( nulls > obs ) # 0.013
+
+# maybe hf diet would make skinnier mice - we want to know how often the difference would be bigger in both directions
+mean( abs(nulls) > obs ) # 0.0259
+```
+
+That's the p value. But normally we don't have the entire population to check against... so how do we infer?
+
+### Assessment
+```{r}
+# 1
+set.seed(1)
+n = 1000
+nulls = vector("numeric", n)
+for(i in 1:n){
+  s_control = sample(population, 5)
+  nulls[i] = mean(s_control)
+}
+
+mean(abs(nulls - mean(population)) > 1) # 0.498
+
+# 2
+set.seed(1)
+n = 10000
+nulls = vector("numeric", n)
+for(i in 1:n){
+  s_control = sample(population, 5)
+  nulls[i] = mean(s_control)
+}
+
+mean(abs(nulls - mean(population)) > 1) # 0.4976
+
+# 3
+set.seed(1)
+n = 1000
+nulls = vector("numeric", n)
+for(i in 1:n){
+  s_control = sample(population, 50)
+  nulls[i] = mean(s_control)
+}
+
+mean(abs(nulls - mean(population)) > 1) # 0.019
+```
+
+Increasing sample size decreases deviation from sample mean.
+
+## Probability distributions
+
+Given the heights of all males in population, we can say what's the probability that a given man is below a given height with the function F(a) = Pr(Height < a). Then we can say what's the probability that a man is between two heights (a and b) with F(b) - F(a)
+
+### Assessment
+```{r}
+library(gapminder)
+data(gapminder)
+head(gapminder)
+
+x = filter(gapminder, year==1952) 
+hist(x$lifeExp)
+```
+
+*The empirical cumulative distribution function (or empirical cdf or empirical distribution function) is the function F(a) for any a, which tells you the proportion of the values which are less than or equal to a.*
+
+can do this with `mean(x <= a)`, or use `ecdf()`
+
+```{r}
+le = x$lifeExp
+mean(le <= 40)
+
+mean(le <= 60) - mean(le <= 40)
+
+plot(ecdf(le)) # plots proportion under given value `q`
+# eg.
+f = ecdf(le)
+f(60) - f(40)
+
+# same as:
+prop = function(q) {
+  mean(le <= q)
+}
+prop(60) - prop(40)
+
+qs = seq(from=min(le), to=max(le), length=20)
+
+props = sapply(qs, prop)
+plot(qs, props)
+
+# annonymous function version
+props = sapply(qs, function(q) mean(le <= q))
+```
+
+# Central Limit Theorem
+
