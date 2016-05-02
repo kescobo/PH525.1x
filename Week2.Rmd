@@ -176,10 +176,12 @@ qs = seq(from=min(le), to=max(le), length=20)
 
 props = sapply(qs, prop)
 plot(qs, props)
-
+"ecdf_manual.png"
 # annonymous function version
 props = sapply(qs, function(q) mean(le <= q))
 ```
+
+![picture](ecdf_manual.png)
 
 # Central Limit Theorem
 
