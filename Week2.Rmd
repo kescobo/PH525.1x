@@ -181,7 +181,103 @@ plot(qs, props)
 props = sapply(qs, function(q) mean(le <= q))
 ```
 
-![picture](ecdf_manual.png)
+![picture](graphs/ecdf_manual.png)
 
 # Central Limit Theorem
+
+If distribution is normal, mean (μ) and standard deviation (σ) define the entire distribution. If data set is normal, 95% of values are between 2σ of the mean etc, 99% within 2.5σ etc. 
+
+For dataset M, with mean = μ and standard dev = σ (using python notation for list comprehension :-/) 
+Variance = σ^2 = 1 / length(M) * sum([x - μ for x in M])
+
+*Quantile-quantile (qq) plot*: How well does your data fit the normal distribution? Checks actual value for each quantile (1%, 2%... etc) against expected value in normal distribution. If perfect fit, will cluster around y = x
+
+*Standard Units*: number of standard deviations from the mean (Z)
+
+### p-set 1 and notes
+```{r eval=FALSE}
+
+n = 1000
+means5 = vector("numeric", n)
+for(i in 1:n){
+  s_control = sample(population, 5)
+  means5[i] = mean(s_control)
+}
+
+n = 1000
+means50 = vector("numeric", n)
+for(i in 1:n){
+  s_control = sample(population, 50)
+  means50[i] = mean(s_control)
+}
+
+hist(means5)
+hist(means50)
+```
+
+![5](graphs/means5.png) ![50](graphs/means50.png)
+
+```{r}
+f = ecdf(means50) # genderates empirical cumulative distribution function
+f(25)-f(23) # 0.98
+
+g = pnorm(c(23, 25), mean=23.9, sd=0.43) # [1] 0.01817354 0.99473831
+g[2] - g[1] # 0.9765648
+```
+
+## Statistical inferences
+
+*Notation*: If the population = x, samples are $X_1$, $X_2$ etc. $μ_x$ = population mean (as opposed to $\bar{X}$
+
+$\bar{X}$ is a random variable. CLT helps us determine how far away $\bar{X}$is likely to be from $μ_x$
+
+```{r eval=FALSE}
+dat = read.csv("dagdata/inst/extdata/mice_pheno.csv")
+dat = na.omit(dat)
+
+head(dat)
+
+x = filter(dat, Diet=="chow" & Sex=="M") %>% select(Bodyweight) %>% unlist
+mean(x) # 30.96381
+
+library(rafalib)
+popsd(x) # 4.420501
+
+set.seed(1)
+X = sample(x, 25)
+mean(X) # 32.0956
+
+
+y = filter(dat, Diet=="hf" & Sex=="M") %>% select(Bodyweight) %>% unlist
+mean(y) # 34.84793
+popsd(y) # 5.574609
+
+set.seed(1)
+Y = sample(y, 25)
+mean(Y) # 34.768
+
+abs( (mean(y) - mean(x)) - (mean(Y) - mean(X))) # 1.211716
+
+
+w = filter(dat, Diet=="chow" & Sex=="F") %>% select(Bodyweight) %>% unlist
+mean(x)
+
+set.seed(1)
+W = sample(w, 25)
+
+z = filter(dat, Diet=="hf" & Sex=="F") %>% select(Bodyweight) %>% unlist
+
+set.seed(1)
+Z = sample(z, 25)
+
+abs( (mean(z) - mean(w)) - (mean(Z) - mean(W))) # 0.7364828
+```
+
+## CLT
+[textbook chapter](http://genomicsclass.github.io/book/pages/clt_and_t-distribution.html)
+
+$$ \frac{\bar{Y} - \mu}{\sigma_Y/\sqrt{N}} $$
+
+Remember, %\sigma^2% is variance.
+**Note**: Standard error ~= $\sigma$, just for a sample instead of population
 
