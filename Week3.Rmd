@@ -1,0 +1,41 @@
+---
+author: "Kevin Bonham"
+title: "Week 3"
+date: "12May, 2016"
+output: html_document
+---
+
+## Inference I
+
+```{r}
+library(rafalib)
+library(dplyr)
+dat = read.table("dagdata/inst/extdata/babies.txt", header=TRUE)
+
+dat.ns <- filter(dat, smoke==0) %>% select(bwt) %>% unlist 
+dat.s <- filter(dat, smoke==1) %>% select(bwt) %>% unlist
+
+mx = mean(dat.ns)
+my = mean(dat.s)
+sdx = popsd(dat.ns)
+sdy = popsd(dat.s)
+vx = popvar(dat.ns)
+vy = popvar(dat.s)
+```
+
+### Exercises
+
+```{r}
+set.seed(1)
+X = sample(dat.ns, 25)
+Y = sample(dat.s, 25)
+
+tval = (mean(Y)-mean(X)) / sqrt(var(X)/25 + var(Y)/25) # 2.120904
+
+1 - (pnorm(abs(tval)) - pnorm(-abs(tval))) # 0.03392985
+2*pnorm(-abs(tval))
+
+qnorm(0.995)*sqrt( sd( dat.ns)^2/25 + sd( dat.s)^2/25 )
+```
+
+
